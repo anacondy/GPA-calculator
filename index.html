@@ -98,6 +98,11 @@
     .percentage { color: #6a1b9a; }
     .gpa { color: #2e7d32; }
     .grade { color: #0d47a1; }
+    .delete-icon {
+      cursor: pointer;
+      color: red;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -121,6 +126,7 @@
 
   <script>
     let subjects = [];
+    const inputs = ["subject", "obtained", "total"];
 
     document.addEventListener("keydown", function(event) {
       if (event.key === "Shift") {
@@ -134,6 +140,20 @@
         } else if (document.activeElement.id === "total") {
           addSubject();
           document.getElementById("subject").focus();
+        }
+      }
+      if (event.key === "ArrowRight") {
+        let idx = inputs.indexOf(document.activeElement.id);
+        if (idx !== -1) {
+          let next = inputs[(idx + 1) % inputs.length];
+          document.getElementById(next).focus();
+        }
+      }
+      if (event.key === "ArrowLeft") {
+        let idx = inputs.indexOf(document.activeElement.id);
+        if (idx !== -1) {
+          let prev = inputs[(idx - 1 + inputs.length) % inputs.length];
+          document.getElementById(prev).focus();
         }
       }
     });
@@ -150,6 +170,11 @@
       document.getElementById("obtained").value = "";
       document.getElementById("total").value = "";
       document.getElementById("subject").focus();
+      renderTable();
+    }
+
+    function deleteSubject(index) {
+      subjects.splice(index, 1);
       renderTable();
     }
 
@@ -172,13 +197,13 @@
     }
 
     function renderTable(totalObt = null, totalMax = null, percentage = null, gpa = null, grade = null) {
-      let html = "<table><tr><th>#</th><th>Subject</th><th>Obtained Marks</th><th>Total Marks</th></tr>";
+      let html = "<table><tr><th>#</th><th>Subject</th><th>Obtained Marks</th><th>Total Marks</th><th>Delete</th></tr>";
       subjects.forEach((s, i) => {
-        html += `<tr><td>${i + 1}</td><td>${s.subject}</td><td>${s.obtained}</td><td>${s.total}</td></tr>`;
+        html += `<tr><td>${i + 1}</td><td>${s.subject}</td><td>${s.obtained}</td><td>${s.total}</td><td><span class='delete-icon' onclick='deleteSubject(${i})'>&#10006;</span></td></tr>`;
       });
 
       if (totalObt !== null) {
-        html += `<tr><th colspan=2>Total</th><th>${totalObt}</th><th>${totalMax}</th></tr>`;
+        html += `<tr><th colspan=2>Total</th><th>${totalObt}</th><th>${totalMax}</th><th></th></tr>`;
         html += `</table><div class='summary'>
           <p class='percentage'>Percentage: ${percentage}%</p>
           <p class='gpa'>GPA: ${gpa}</p>
