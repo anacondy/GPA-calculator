@@ -129,13 +129,6 @@
     let subjects = [];
     const inputs = ["subject", "obtained", "total"];
 
-    // Sanitize HTML to prevent XSS attacks
-    function sanitizeHTML(str) {
-      const div = document.createElement('div');
-      div.textContent = str;
-      return div.innerHTML;
-    }
-
     document.addEventListener("keydown", function(event) {
       if (event.key === "Shift") {
         calculate();
@@ -195,7 +188,7 @@
         return;
       }
 
-      subjects.push({ subject: sanitizeHTML(subject), obtained, total });
+      subjects.push({ subject, obtained, total });
       document.getElementById("subject").value = "";
       document.getElementById("obtained").value = "";
       document.getElementById("total").value = "";
@@ -275,7 +268,7 @@
         const deleteSpan = document.createElement("span");
         deleteSpan.className = "delete-icon";
         deleteSpan.textContent = "✖";
-        deleteSpan.onclick = () => deleteSubject(i);
+        deleteSpan.onclick = ((index) => () => deleteSubject(index))(i); // Proper closure
         deleteSpan.style.cursor = "pointer";
         cellDelete.appendChild(deleteSpan);
         row.appendChild(cellDelete);
