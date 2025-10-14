@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
   <title>GPA / Percentage Calculator</title>
   <style>
     body {
@@ -111,9 +112,9 @@
     <p class="hint">Press <b>SHIFT</b> to get results</p>
 
     <div class="inputs">
-      <input type="text" id="subject" placeholder="Subject">
-      <input type="number" id="obtained" placeholder="Obtained Marks">
-      <input type="number" id="total" placeholder="Total Marks">
+      <input type="text" id="subject" placeholder="Subject" maxlength="50">
+      <input type="number" id="obtained" placeholder="Obtained Marks" min="0" step="0.01">
+      <input type="number" id="total" placeholder="Total Marks" min="0" step="0.01">
     </div>
 
     <div class="buttons">
@@ -127,6 +128,13 @@
   <script>
     let subjects = [];
     const inputs = ["subject", "obtained", "total"];
+
+    // Sanitize HTML to prevent XSS attacks
+    function sanitizeHTML(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
 
     document.addEventListener("keydown", function(event) {
       if (event.key === "Shift") {
@@ -163,9 +171,31 @@
       const obtained = parseFloat(document.getElementById("obtained").value);
       const total = parseFloat(document.getElementById("total").value);
 
-      if (!subject || isNaN(obtained) || isNaN(total)) return;
+      // Validate inputs
+      if (!subject || isNaN(obtained) || isNaN(total)) {
+        alert("Please fill in all fields with valid values.");
+        return;
+      }
 
-      subjects.push({ subject, obtained, total });
+      // Prevent negative numbers
+      if (obtained < 0 || total < 0) {
+        alert("Marks cannot be negative.");
+        return;
+      }
+
+      // Prevent obtained marks from exceeding total marks
+      if (obtained > total) {
+        alert("Obtained marks cannot exceed total marks.");
+        return;
+      }
+
+      // Validate total marks is not zero
+      if (total === 0) {
+        alert("Total marks cannot be zero.");
+        return;
+      }
+
+      subjects.push({ subject: sanitizeHTML(subject), obtained, total });
       document.getElementById("subject").value = "";
       document.getElementById("obtained").value = "";
       document.getElementById("total").value = "";
@@ -179,10 +209,19 @@
     }
 
     function calculate() {
-      if (subjects.length === 0) return;
+      if (subjects.length === 0) {
+        alert("Please add at least one subject to calculate.");
+        return;
+      }
 
       let totalObt = subjects.reduce((sum, s) => sum + s.obtained, 0);
       let totalMax = subjects.reduce((sum, s) => sum + s.total, 0);
+      
+      if (totalMax === 0) {
+        alert("Total marks cannot be zero.");
+        return;
+      }
+
       let percentage = ((totalObt / totalMax) * 100).toFixed(2);
       let gpa = (percentage / 10).toFixed(2);
 
@@ -197,23 +236,100 @@
     }
 
     function renderTable(totalObt = null, totalMax = null, percentage = null, gpa = null, grade = null) {
-      let html = "<table><tr><th>#</th><th>Subject</th><th>Obtained Marks</th><th>Total Marks</th><th>Delete</th></tr>";
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = ""; // Clear previous content
+
+      // Create table
+      const table = document.createElement("table");
+      
+      // Create header row
+      const headerRow = document.createElement("tr");
+      ["#", "Subject", "Obtained Marks", "Total Marks", "Delete"].forEach(text => {
+        const th = document.createElement("th");
+        th.textContent = text;
+        headerRow.appendChild(th);
+      });
+      table.appendChild(headerRow);
+
+      // Create data rows
       subjects.forEach((s, i) => {
-        html += `<tr><td>${i + 1}</td><td>${s.subject}</td><td>${s.obtained}</td><td>${s.total}</td><td><span class='delete-icon' onclick='deleteSubject(${i})'>&#10006;</span></td></tr>`;
+        const row = document.createElement("tr");
+        
+        const cellNum = document.createElement("td");
+        cellNum.textContent = i + 1;
+        row.appendChild(cellNum);
+
+        const cellSubject = document.createElement("td");
+        cellSubject.textContent = s.subject;
+        row.appendChild(cellSubject);
+
+        const cellObtained = document.createElement("td");
+        cellObtained.textContent = s.obtained;
+        row.appendChild(cellObtained);
+
+        const cellTotal = document.createElement("td");
+        cellTotal.textContent = s.total;
+        row.appendChild(cellTotal);
+
+        const cellDelete = document.createElement("td");
+        const deleteSpan = document.createElement("span");
+        deleteSpan.className = "delete-icon";
+        deleteSpan.textContent = "✖";
+        deleteSpan.onclick = () => deleteSubject(i);
+        deleteSpan.style.cursor = "pointer";
+        cellDelete.appendChild(deleteSpan);
+        row.appendChild(cellDelete);
+
+        table.appendChild(row);
       });
 
+      // Add total row if calculated
       if (totalObt !== null) {
-        html += `<tr><th colspan=2>Total</th><th>${totalObt}</th><th>${totalMax}</th><th></th></tr>`;
-        html += `</table><div class='summary'>
-          <p class='percentage'>Percentage: ${percentage}%</p>
-          <p class='gpa'>GPA: ${gpa}</p>
-          <p class='grade'>Grade: ${grade}</p>
-        </div>`;
-      } else {
-        html += "</table>";
+        const totalRow = document.createElement("tr");
+        
+        const thTotal = document.createElement("th");
+        thTotal.colSpan = 2;
+        thTotal.textContent = "Total";
+        totalRow.appendChild(thTotal);
+
+        const thObt = document.createElement("th");
+        thObt.textContent = totalObt;
+        totalRow.appendChild(thObt);
+
+        const thMax = document.createElement("th");
+        thMax.textContent = totalMax;
+        totalRow.appendChild(thMax);
+
+        const thEmpty = document.createElement("th");
+        totalRow.appendChild(thEmpty);
+
+        table.appendChild(totalRow);
       }
 
-      document.getElementById("result").innerHTML = html;
+      resultDiv.appendChild(table);
+
+      // Add summary if calculated
+      if (totalObt !== null) {
+        const summaryDiv = document.createElement("div");
+        summaryDiv.className = "summary";
+
+        const pPercentage = document.createElement("p");
+        pPercentage.className = "percentage";
+        pPercentage.textContent = `Percentage: ${percentage}%`;
+        summaryDiv.appendChild(pPercentage);
+
+        const pGpa = document.createElement("p");
+        pGpa.className = "gpa";
+        pGpa.textContent = `GPA: ${gpa}`;
+        summaryDiv.appendChild(pGpa);
+
+        const pGrade = document.createElement("p");
+        pGrade.className = "grade";
+        pGrade.textContent = `Grade: ${grade}`;
+        summaryDiv.appendChild(pGrade);
+
+        resultDiv.appendChild(summaryDiv);
+      }
     }
   </script>
 </body>
