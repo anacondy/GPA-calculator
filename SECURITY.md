@@ -41,7 +41,7 @@ If you discover a security vulnerability, please report it by:
 
 ## Recent Security Updates
 
-- **2025-01**: Implemented CSP headers
-- **2025-01**: Added input sanitization
-- **2025-01**: Enhanced validation for all inputs
-- **2025-01**: Replaced innerHTML with safe DOM methods
+- **2024-10**: Implemented CSP headers
+- **2024-10**: Added input sanitization
+- **2024-10**: Enhanced validation for all inputs
+- **2024-10**: Replaced innerHTML with safe DOM methods
