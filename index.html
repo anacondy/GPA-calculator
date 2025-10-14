@@ -268,7 +268,7 @@
         const deleteSpan = document.createElement("span");
         deleteSpan.className = "delete-icon";
         deleteSpan.textContent = "✖";
-        deleteSpan.onclick = ((index) => () => deleteSubject(index))(i); // Proper closure
+        deleteSpan.onclick = deleteSubject.bind(null, i);
         deleteSpan.style.cursor = "pointer";
         cellDelete.appendChild(deleteSpan);
         row.appendChild(cellDelete);
