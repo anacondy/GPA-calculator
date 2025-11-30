@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
   <meta name="theme-color" content="#1a73e8">
   <meta name="description" content="A secure, user-friendly GPA and percentage calculator for students">
@@ -341,9 +341,8 @@
         font-size: 13px;
       }
 
-      /* Make table scrollable on very narrow screens */
-      table {
-        display: block;
+      /* Make table scrollable on very narrow screens using wrapper approach */
+      #result {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
       }
@@ -406,9 +405,9 @@
     /* Reduce motion for users who prefer it */
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms;
+        animation-iteration-count: 1;
+        transition-duration: 0.01ms;
       }
     }
 
